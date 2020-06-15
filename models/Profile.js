@@ -1,0 +1,12 @@
+/* 
+  userId
+  fName
+  lName
+  Name
+  City
+  State
+  Avatar
+  githubUrl
+  twitterUrl
+  bio
+*/

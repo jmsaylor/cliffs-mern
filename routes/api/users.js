@@ -2,7 +2,9 @@ const express = require("express");
 const { check, validationResult } = require("express-validator");
 const router = express.Router();
 const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
 const isEmpty = require("../../utils/isEmpty");
+const config = require("../../config");
 
 const User = require("../../models/User");
 
@@ -74,6 +76,16 @@ router.put(
           .status(403)
           .json({ errors: { message: "invalid password" } });
       }
+
+      // information >> jwt encode + key >> token >> decode + key >> information
+      const payload = {
+        id: user._id,
+        email: user.email,
+      };
+
+      const token = jwt.sign(payload, config.secretOrKey, {});
+
+      res.json(token);
 
       //create the jwt token and return it to user. email and the id
     } catch (error) {
