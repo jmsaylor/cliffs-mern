@@ -31,6 +31,11 @@ router.post(
         password: req.body.password,
       };
 
+      const existingUser = await User.findOne({ email: userData.email });
+      if (!isEmpty(existingUser)) {
+        return res.status(400).json({ errors: { email: "Email in use" } });
+      }
+
       const salt = await bcrypt.genSalt(10);
       userData.password = await bcrypt.hash(userData.password, salt);
 
@@ -66,18 +71,19 @@ router.put(
       const user = await User.findOne({ email: req.body.email });
 
       if (isEmpty(user)) {
-        return res.status(404).json({ errors: { message: "user not found" } });
+        return res.status(400).json({ errors: { message: "Invalid Login" } });
       }
 
       const isMatch = await bcrypt.compare(req.body.password, user.password);
 
       if (!isMatch) {
-        return res
-          .status(403)
-          .json({ errors: { message: "invalid password" } });
+        return res.status(400).json({ errors: { message: "Invalid Login" } });
       }
 
       // information >> jwt encode + key >> token >> decode + key >> information
+      User.findByIdAndUpdate(user._id, { lastLogin: Date.now() });
+
+      //create the jwt token and return it to user. email and the id
       const payload = {
         id: user._id,
         email: user.email,
@@ -86,8 +92,6 @@ router.put(
       const token = jwt.sign(payload, config.secretOrKey, {});
 
       res.json(token);
-
-      //create the jwt token and return it to user. email and the id
     } catch (error) {
       console.error(error);
       return res.status(500).json(error);
